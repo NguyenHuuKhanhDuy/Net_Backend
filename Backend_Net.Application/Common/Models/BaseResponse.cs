@@ -1,4 +1,7 @@
-﻿namespace Backend_Net.Application.Common.Models;
+﻿using System.Net;
+using Backend_Net.Application.Common.Extensions;
+
+namespace Backend_Net.Application.Common.Models;
 
 public class PagingInfo
 {
@@ -10,6 +13,7 @@ public class PagingInfo
 
 public class BaseResponse
 {
+    public HttpStatusCode StatusCode { get; set; }
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
     public string? ErrorMessageCode { get; set; }
@@ -19,6 +23,25 @@ public class BaseResponse
 
     public static BaseResponse Fail(string message, string? code = null)
         => new() { Success = false, ErrorMessage = message, ErrorMessageCode = code };
+
+    public BaseResponse WithMessage(Enum status)
+    {
+        ErrorMessage = status.Localize();
+        ErrorMessageCode = status.Code();
+        return this;
+    }
+    
+    public BaseResponse WithSuccess(bool success)
+    {
+        Success = success;
+        return this;
+    }
+
+    public BaseResponse WithStatus(HttpStatusCode statusCode)
+    {
+        StatusCode = statusCode;
+        return this;
+    }
 }
 
 public class BaseResponse<T> : BaseResponse
@@ -33,7 +56,7 @@ public class BaseResponse<T> : BaseResponse
             Paging = paging
         };
 
-    public static new BaseResponse<T> Fail(string message, string? code = null)
+    public new static BaseResponse<T> Fail(string message, string? code = null)
         => new()
         {
             Success = false,

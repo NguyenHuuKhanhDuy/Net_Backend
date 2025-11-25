@@ -22,31 +22,809 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Backend_Net.Domain.Entities.User", b =>
+            modelBuilder.Entity("Backend_Net.Domain.Entities.Currency", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("MinorUnit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(2);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("Currency", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethod", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
-                    b.Property<string>("FullName")
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("ProviderType")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("PaymentMethod", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethodCurrency", b =>
+                {
+                    b.Property<Guid>("PaymentMethodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal?>("MaxAmount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<decimal?>("MinAmount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.HasKey("PaymentMethodId", "CurrencyCode");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.ToTable("PaymentMethodCurrency", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<string>("CallbackData")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("CallbackUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("FeeAmount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<decimal?>("NetAmount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<string>("OrderId")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("PaymentMethodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderRawReq")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ProviderRawRes")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ProviderTxnId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReturnUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(2);
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("idx_payment_tx_tenant_created_at");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("idx_payment_tx_tenant_status");
+
+                    b.ToTable("PaymentTransaction", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransactionAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("ChangedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "ChangedAt")
+                        .HasDatabaseName("idx_payment_tx_audit_tenant");
+
+                    b.HasIndex("TransactionId", "ChangedAt")
+                        .HasDatabaseName("idx_payment_tx_audit_tx");
+
+                    b.ToTable("PaymentTransactionAudit", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransactionStatusHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("ChangedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("FromStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ToStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId", "ChangedAt")
+                        .HasDatabaseName("idx_payment_tx_status_hist_tx");
+
+                    b.ToTable("PaymentTransactionStatusHistory", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.RequestLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Headers")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("QueryParams")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("ResponseStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantCredentialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("idx_request_log_created_at");
+
+                    b.HasIndex("Path")
+                        .HasDatabaseName("idx_request_log_path");
+
+                    b.HasIndex("TenantCredentialId")
+                        .HasDatabaseName("idx_request_log_tenant_credential");
+
+                    b.ToTable("RequestLog", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.Tenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Tenant", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantCredential", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("ApiKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastRotatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("SecretEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .HasDatabaseName("idx_tenant_credentials_apikey");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("idx_tenant_credentials_tenant_status");
+
+                    b.ToTable("TenantCredentials", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantPaymentMethod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("ConfigJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<Guid>("PaymentMethodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("TenantId", "PaymentMethodId")
+                        .IsUnique();
+
+                    b.ToTable("TenantPaymentMethod", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantPaymentMethodCurrency", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaymentMethodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("FeeType")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("FeeValue")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal?>("MaxAmount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<decimal?>("MinAmount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.HasKey("TenantId", "PaymentMethodId", "CurrencyCode");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.HasIndex("PaymentMethodId", "CurrencyCode");
+
+                    b.ToTable("TenantPaymentMethodCurrency", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Attempt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("HttpStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RequestBody")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId")
+                        .HasDatabaseName("idx_webhook_delivery_event");
+
+                    b.ToTable("WebhookDelivery", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("CallbackData")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("CallbackUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("WebhookEvent", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethodCurrency", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "Currency")
+                        .WithMany("PaymentMethodCurrencies")
+                        .HasForeignKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentMethod", "PaymentMethod")
+                        .WithMany("PaymentMethodCurrencies")
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("PaymentMethod");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "Currency")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("CurrencyCode");
+
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentMethod", "PaymentMethod")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("PaymentMethodId");
+
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("PaymentMethod");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransactionAudit", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("PaymentTransactionAudits")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentTransaction", "Transaction")
+                        .WithMany("Audits")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransactionStatusHistory", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentTransaction", "Transaction")
+                        .WithMany("StatusHistories")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.RequestLog", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.TenantCredential", "TenantCredential")
+                        .WithMany("RequestLogs")
+                        .HasForeignKey("TenantCredentialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TenantCredential");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantCredential", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("Credentials")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantPaymentMethod", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentMethod", "PaymentMethod")
+                        .WithMany("TenantPaymentMethods")
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("TenantPaymentMethods")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentMethod");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantPaymentMethodCurrency", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "Currency")
+                        .WithMany("TenantPaymentMethodCurrencies")
+                        .HasForeignKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentMethod", "PaymentMethod")
+                        .WithMany("TenantPaymentMethodCurrencies")
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("TenantPaymentMethodCurrencies")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentMethodCurrency", "GlobalPaymentMethodCurrency")
+                        .WithMany("TenantPaymentMethodCurrencies")
+                        .HasForeignKey("PaymentMethodId", "CurrencyCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_global_method_currency");
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("GlobalPaymentMethodCurrency");
+
+                    b.Navigation("PaymentMethod");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookDelivery", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.WebhookEvent", "Event")
+                        .WithMany("Deliveries")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookEvent", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany("WebhookEvents")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.PaymentTransaction", "Transaction")
+                        .WithMany("WebhookEvents")
+                        .HasForeignKey("TransactionId");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.Currency", b =>
+                {
+                    b.Navigation("PaymentMethodCurrencies");
+
+                    b.Navigation("PaymentTransactions");
+
+                    b.Navigation("TenantPaymentMethodCurrencies");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethod", b =>
+                {
+                    b.Navigation("PaymentMethodCurrencies");
+
+                    b.Navigation("PaymentTransactions");
+
+                    b.Navigation("TenantPaymentMethodCurrencies");
+
+                    b.Navigation("TenantPaymentMethods");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethodCurrency", b =>
+                {
+                    b.Navigation("TenantPaymentMethodCurrencies");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.Navigation("Audits");
+
+                    b.Navigation("StatusHistories");
+
+                    b.Navigation("WebhookEvents");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.Tenant", b =>
+                {
+                    b.Navigation("Credentials");
+
+                    b.Navigation("PaymentTransactionAudits");
+
+                    b.Navigation("PaymentTransactions");
+
+                    b.Navigation("TenantPaymentMethodCurrencies");
+
+                    b.Navigation("TenantPaymentMethods");
+
+                    b.Navigation("WebhookEvents");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantCredential", b =>
+                {
+                    b.Navigation("RequestLogs");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookEvent", b =>
+                {
+                    b.Navigation("Deliveries");
                 });
 #pragma warning restore 612, 618
         }

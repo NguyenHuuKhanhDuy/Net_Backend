@@ -1,5 +1,7 @@
 using DbUp;
+using DbUp.Engine;
 using DbUp.ScriptProviders;
+using DbUp.Support;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -11,7 +13,7 @@ internal static class Program
 
     private enum DatabaseName
     {
-        Catalog = 1
+        Payment = 1
     }
 
     private static void Main(string[] args)
@@ -41,13 +43,12 @@ internal static class Program
         {
             foreach (var arg in args)
             {
-                if (IsArg(arg, "catalog"))
+                if (IsArg(arg, "payment"))
                 {
-                    Run(DatabaseName.Catalog);
+                    Run(DatabaseName.Payment);
                     continue;
                 }
                 
-
                 throw new ArgumentOutOfRangeException($"{arg} is not a valid database name.");
             }
         }
@@ -76,26 +77,29 @@ internal static class Program
             .JournalToPostgresqlTable("public", "schema_version")
             .WithScripts(new CustomScriptProvider(
                 new FileSystemScriptProvider(Path.Combine(scriptFolderPath, "Sequences")),
-                name => $"{databaseName}_sequence{name}"
+                name => $"{databaseName}_sequence{name}",
+                new SqlScriptOptions { RunGroupOrder = 1, ScriptType = ScriptType.RunOnce }
             ))
             .WithScripts(new CustomScriptProvider(
                 new FileSystemScriptProvider(Path.Combine(scriptFolderPath, "Scripts")),
-                name => $"{databaseName}_script{name}"
+                name => $"{databaseName}_script{name}",
+                new SqlScriptOptions { RunGroupOrder = 2, ScriptType = ScriptType.RunOnce }
             ))
             .WithScripts(new CustomScriptProvider(
                 new FileSystemScriptProvider(Path.Combine(scriptFolderPath, "Functions")),
-                name => $"{databaseName}_function{name}"
+                name => $"{databaseName}_function{name}",
+                new SqlScriptOptions { RunGroupOrder = 3, ScriptType = ScriptType.RunOnce }
             ))
             .WithScripts(new CustomScriptProvider(
                 new FileSystemScriptProvider(Path.Combine(scriptFolderPath, "Alter")),
-                name => $"{databaseName}_alter{name}"
+                name => $"{databaseName}_alter{name}",
+                new SqlScriptOptions { RunGroupOrder = 4, ScriptType = ScriptType.RunOnce }
             ))
             .WithScripts(new CustomScriptProvider(
                 new FileSystemScriptProvider(Path.Combine(scriptFolderPath, "Seed")),
-                name => $"{databaseName}_seed{name}"
+                name => $"{databaseName}_seed{name}",
+                new SqlScriptOptions { RunGroupOrder = 5, ScriptType = ScriptType.RunOnce }
             ))
-
-            // Default settings
             .WithTransactionPerScript()
             .WithVariablesDisabled()
             .LogScriptOutput()

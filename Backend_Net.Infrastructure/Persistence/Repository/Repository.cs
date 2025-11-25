@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Backend_Net.Application.Common.Interfaces;
+using Backend_Net.Application.Common.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;

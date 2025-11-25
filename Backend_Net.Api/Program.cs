@@ -1,71 +1,40 @@
-using System.Globalization;
-using Backend_Net.Api.Middlewares;
-using Backend_Net.Api.Options;
+using Backend_Net.Api.StartupRegistrations;
+using Backend_Net.Api.Validation;
 using Backend_Net.Application;
 using Backend_Net.Infrastructure;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Options;
+using MediatR;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
-Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-// Localization
-builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
+// 1. Logging
+builder.Host.UseLogging();
 
+// 2. Register services
 builder.Services
-    .AddControllers()
-    .AddDataAnnotationsLocalization()
-    .AddViewLocalization();
-
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    var cultures = new[] 
-    {
-        new CultureInfo("en"),
-        new CultureInfo("vi")
-    };
-
-    options.DefaultRequestCulture = new RequestCulture("en");
-    options.SupportedCultures = cultures;
-    options.SupportedUICultures = cultures;
-});
-
-// Options Pattern
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection("Jwt"));
-
-builder.Services.AddCors(o =>
-{
-    o.AddPolicy("Default", p =>
-    {
-        p.AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials()
-            .SetIsOriginAllowed(_ => true);
-    });
-});
-
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    .AddApplication(builder.Configuration)
+    .AddInfrastructure(builder.Configuration)
+    .AddLocalizationLayer()
+    .AddCorsLayer(builder.Configuration)
+    .AddSwaggerLayer()
+    .AddControllersLayer()
+    .AddCustomHttpContextAccessor()
+    .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 
 var app = builder.Build();
 
-app.UseRequestLocalization(
-    app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
+// 3. Middleware pipeline
+app.UseRequestLocalizationLayer();
+app.UseSwaggerLayer();
+app.UseSerilogRequestLogging();
+app.UseCors("_allowSpecificOrigins");
+app.UseRequestLogging();
+app.UseExceptionLayer();
 
-if (!app.Environment.IsProduction())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// 4. Init localization service
+app.InitLocalization();
 
-app.UseCors("Default");
-
-app.UseMiddleware<ExceptionMiddleware>();
-
+// 5. Map endpoints
 app.MapControllers();
 
 app.Run();

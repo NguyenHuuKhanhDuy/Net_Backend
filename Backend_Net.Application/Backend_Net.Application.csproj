@@ -17,6 +17,14 @@
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Orders\Commands\" />
+    <Folder Include="Features\RequestLog\Commands\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

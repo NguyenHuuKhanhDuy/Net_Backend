@@ -1,4 +1,8 @@
 ﻿using Backend_Net.Application.Common.Interfaces;
+using Backend_Net.Application.Common.Interfaces.Repositories;
+using Backend_Net.Infrastructure.Localization;
+using Backend_Net.Infrastructure.Options;
+using Backend_Net.Infrastructure.Options.Logging;
 using Backend_Net.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +23,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        services.AddSingleton<ILocalizationService, LocalizationService>();
         return services;
     }
 }

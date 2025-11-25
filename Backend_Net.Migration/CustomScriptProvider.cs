@@ -1,5 +1,6 @@
 ﻿using DbUp.Engine;
 using DbUp.Engine.Transactions;
+using DbUp.Support;
 
 namespace Backend_Net.Migration;
 
@@ -7,13 +8,18 @@ public class CustomScriptProvider : IScriptProvider
 {
     private readonly IScriptProvider _innerProvider;
     private readonly Func<string, string> _rename;
+    private readonly SqlScriptOptions _sqlScriptOptions;
 
-    public CustomScriptProvider(
+    public CustomScriptProvider
+    (
         IScriptProvider innerProvider,
-        Func<string, string> rename)
+        Func<string, string> rename,
+        SqlScriptOptions sqlScriptOptions
+    )
     {
         _innerProvider = innerProvider;
         _rename = rename;
+        _sqlScriptOptions = sqlScriptOptions;
     }
 
     public IEnumerable<SqlScript> GetScripts(IConnectionManager connectionManager)
@@ -23,8 +29,7 @@ public class CustomScriptProvider : IScriptProvider
         foreach (var s in scripts)
         {
             var newName = _rename(s.Name);
-
-            yield return new SqlScript(newName, s.Contents);
+            yield return new SqlScript(newName, s.Contents, _sqlScriptOptions);
         }
     }
 }
