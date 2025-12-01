@@ -33,4 +33,29 @@
     <data name="TEN_ERR_002" xml:space="preserve">
         <value>Đối tác không hoạt động</value>
     </data>
+    <data name="INV_ERR_001" xml:space="preserve">
+        <value>Token không hợp lệ hoặc hết hạn</value>
+    </data>
+    <data name="PMT_ERR_001" xml:space="preserve">
+        <value>Không tìm thấy giao dịch</value>
+    </data>
+    <data name="PMM_ERR_001" xml:space="preserve">
+        <value>Phương thức thanh toán không được hỗ trợ</value>
+    </data>
+    <data name="PMM_ERR_002" xml:space="preserve">
+        <value>
+Không thể lấy tỷ giá hối đoái cho loại tiền tệ đã chỉ định</value>
+    </data>
+    <data name="CUR_ERR_001" xml:space="preserve">
+        <value>Loại tiền tệ không được hỗ trợ</value>
+    </data>
+    <data name="PMT_ERR_002" xml:space="preserve">
+        <value>Giao dịch thanh toán được xử lí</value>
+    </data>
+    <data name="EXH_ERR_001" xml:space="preserve">
+        <value>Lỗi hệ thống</value>
+    </data>
+    <data name="EXH_ERR_002" xml:space="preserve">
+        <value>Lỗi khi thực hiện dịch vụ bên ngoài</value>
+    </data>
 </root>

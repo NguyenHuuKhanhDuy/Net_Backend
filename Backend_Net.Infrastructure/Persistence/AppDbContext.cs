@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Currency> Currencies => Set<Currency>();
+    public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
     public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
     public DbSet<PaymentMethodCurrency> PaymentMethodCurrencies => Set<PaymentMethodCurrency>();
     public DbSet<PaymentTransactionAudit> PaymentTransactionAudits => Set<PaymentTransactionAudit>();
@@ -23,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<TenantPaymentMethodCurrency> TenantPaymentMethodCurrencies => Set<TenantPaymentMethodCurrency>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
     public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
+    public DbSet<TenantCredential> TenantCredentials => Set<TenantCredential>();
+    public DbSet<Country> Countries => Set<Country>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -33,4 +33,28 @@
     <data name="TEN_ERR_002" xml:space="preserve">
         <value>Tenant is inactive</value>
     </data>
+    <data name="INV_ERR_001" xml:space="preserve">
+        <value>Token is invalid or expired</value>
+    </data>
+    <data name="PMT_ERR_001" xml:space="preserve">
+        <value>Payment transaction not found</value>
+    </data>
+    <data name="PMM_ERR_001" xml:space="preserve">
+        <value>Unsupported payment method</value>
+    </data>
+    <data name="PMM_ERR_002" xml:space="preserve">
+        <value>Can not get currency rate for the specified currency</value>
+    </data>
+    <data name="CUR_ERR_001" xml:space="preserve">
+        <value>Currency not supported</value>
+    </data>
+    <data name="PMT_ERR_002" xml:space="preserve">
+        <value>Payment transaction already processed</value>
+    </data>
+    <data name="EXH_ERR_001" xml:space="preserve">
+        <value>Internal server error</value>
+    </data>
+    <data name="EXH_ERR_002" xml:space="preserve">
+        <value>Error when executing external service</value>
+    </data>
 </root>

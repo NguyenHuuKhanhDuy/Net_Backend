@@ -25,5 +25,12 @@ public class CurrencyConfiguration : IEntityTypeConfiguration<Currency>
         b.Property(x => x.IsActive)
             .IsRequired()
             .HasDefaultValue(true);
+        
+        b.Property(x => x.IsGlobal)
+            .IsRequired()
+            .HasDefaultValue(false);
+        
+        b.Property(x => x.Type)
+            .IsRequired();
     }
 }

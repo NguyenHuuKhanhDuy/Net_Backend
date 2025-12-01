@@ -3,16 +3,13 @@
 public class WebhookEvent
 {
     public Guid Id { get; set; }
-
     public string EventType { get; set; } = null!;
     public Guid TenantId { get; set; }
-
-    public Guid? TransactionId { get; set; }
-
+    public Guid TransactionId { get; set; }
     public string CallbackUrl { get; set; } = null!;
-    public string? CallbackData { get; set; }
-
     public string Payload { get; set; } = null!;
+    public string ApiKey { get; set; } = null!;
+    public string Signature { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
 
     public Tenant Tenant { get; set; } = null!;

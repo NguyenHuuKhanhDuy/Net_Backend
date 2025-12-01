@@ -5,16 +5,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Backend_Net.Infrastructure.Persistence;
 
-public class UnitOfWork : IUnitOfWork, IDisposable
+public class UnitOfWork : IUnitOfWork, IAsyncDisposable, IDisposable
 {
     private readonly AppDbContext _context;
-    private IDbContextTransaction _transaction;
+    private IDbContextTransaction? _transaction;
     private readonly ILogger _logger;
 
-    public UnitOfWork(AppDbContext context, ILoggerFactory logger)
+    public UnitOfWork(AppDbContext context, ILoggerFactory loggerFactory)
     {
         _context = context;
-        _logger = logger.CreateLogger("logs");
+        _logger = loggerFactory.CreateLogger("UnitOfWork");
 
         Tenant = new TenantRepository(_context, _logger);
         Currency = new CurrencyRepository(_context, _logger);
@@ -29,10 +29,13 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         WebhookDelivery = new WebhookDeliveryRepository(_context, _logger);
         RequestLog = new RequestLogRepository(_context, _logger);
         TenantCredential = new TenantCredentialRepository(_context, _logger);
+        Country = new CountryRepository(_context, _logger);
+        CurrencyRate = new CurrencyRateRepository(_context, _logger);
     }
 
     public ITenantRepository Tenant { get; }
     public ICurrencyRepository Currency { get; }
+    public ICurrencyRateRepository CurrencyRate { get; }
     public IPaymentMethodRepository PaymentMethod { get; }
     public IPaymentMethodCurrencyRepository PaymentMethodCurrency { get; }
     public ITenantPaymentMethodRepository TenantPaymentMethod { get; }
@@ -44,30 +47,54 @@ public class UnitOfWork : IUnitOfWork, IDisposable
     public IWebhookDeliveryRepository WebhookDelivery { get; }
     public IRequestLogRepository RequestLog { get; }
     public ITenantCredentialRepository TenantCredential { get; }
+    public ICountryRepository Country { get; }
 
-    public async Task SaveAsync()
+    public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
-
-    public async Task<IDbContextTransaction> OpenTransactionAsync()
+    
+    public async Task<IDbContextTransaction> OpenTransactionAsync(
+        CancellationToken cancellationToken = default)
     {
-        _transaction = await _context.Database.BeginTransactionAsync();
+        _transaction = await _context.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
         return _transaction;
     }
 
-    public async Task CommitAsync()
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
-        await _transaction.CommitAsync();
+        if (_transaction == null)
+            throw new InvalidOperationException("No active transaction");
+
+        await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task RollbackAsync()
+    public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
-        await _transaction.RollbackAsync();
+        if (_transaction != null)
+        {
+            await _transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     public void Dispose()
     {
+        _transaction?.Dispose();
         _context.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_transaction != null)
+        {
+            await _transaction.DisposeAsync().ConfigureAwait(false);
+        }
+
+        await _context.DisposeAsync().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
     }
 }

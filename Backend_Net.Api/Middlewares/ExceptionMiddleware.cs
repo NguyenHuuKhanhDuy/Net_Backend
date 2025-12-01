@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Backend_Net.Api.Handler;
-using Backend_Net.Api.Validation;
-using Backend_Net.Application.Common.Helpers;
+using Backend_Net.Application.Validation;
+using Shared.Helpers;
 
 namespace Backend_Net.Api.Middlewares;
 

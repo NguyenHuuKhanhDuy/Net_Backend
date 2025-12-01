@@ -1,5 +1,4 @@
 ﻿using Backend_Net.Application.Common.Localization;
-using Backend_Net.Domain.Enums;
 
 namespace Backend_Net.Application.Common.Extensions
 {

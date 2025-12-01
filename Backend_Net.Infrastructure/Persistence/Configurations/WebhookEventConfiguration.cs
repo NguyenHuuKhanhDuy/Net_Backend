@@ -20,12 +20,15 @@ public class WebhookEventConfiguration : IEntityTypeConfiguration<WebhookEvent>
 
         b.Property(x => x.CallbackUrl)
             .IsRequired();
+        
+        b.Property(x => x.ApiKey)
+            .IsRequired();
+        
+        b.Property(x => x.Signature)
+            .IsRequired();
 
         b.Property(x => x.Payload)
             .IsRequired()
-            .HasColumnType("jsonb");
-
-        b.Property(x => x.CallbackData)
             .HasColumnType("jsonb");
 
         b.Property(x => x.CreatedAt)

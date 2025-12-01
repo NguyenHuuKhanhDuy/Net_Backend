@@ -1,6 +1,4 @@
-﻿using Backend_Net.Api.Extensions;
-using Backend_Net.Infrastructure.Options;
-using Backend_Net.Infrastructure.Options.Logging;
+﻿using Backend_Net.Application.Options;
 using Destructurama;
 using Serilog;
 using Serilog.Events;
@@ -8,6 +6,7 @@ using Serilog.Formatting.Compact;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.Elasticsearch;
 using Serilog.Sinks.SystemConsole.Themes;
+using Shared.Extensions;
 
 namespace Backend_Net.Api.StartupRegistrations;
 

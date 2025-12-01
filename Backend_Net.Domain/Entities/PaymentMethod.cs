@@ -1,12 +1,20 @@
-﻿namespace Backend_Net.Domain.Entities;
+﻿using Backend_Net.Domain.Enums;
+
+namespace Backend_Net.Domain.Entities;
 
 public class PaymentMethod
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = null!;
     public string DisplayName { get; set; } = null!;
-    public string ProviderType { get; set; } = null!;
+    public string? BackgroundUrl { get; set; }
+    public PaymentMethodEnum PaymentMethodType { get; set; }
+    public PaymentMethodType Type { get; set; }
+    public PaymentMethodRuleType RuleType { get; set; }
+    public int[] RuleData { get; set; } = [];
     public bool IsActive { get; set; }
+    public decimal Fee { get; set; }
+    public FeeType FeeType { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

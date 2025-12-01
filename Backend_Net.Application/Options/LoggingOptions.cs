@@ -1,4 +1,4 @@
-﻿namespace Backend_Net.Infrastructure.Options.Logging;
+﻿namespace Backend_Net.Application.Options;
 
 public class LoggingOptions
 {

@@ -2,16 +2,23 @@ using System.Net;
 using Backend_Net.Application.Common.Extensions;
 using Backend_Net.Application.Common.Helpers;
 using Backend_Net.Application.Common.Interfaces;
+using Backend_Net.Application.Common.Interfaces.MassTransit;
 using Backend_Net.Application.Common.Interfaces.Repositories;
 using Backend_Net.Application.Constants;
+using Backend_Net.Application.Models.Dtos;
+using Backend_Net.Application.Options;
+using Backend_Net.Application.Services.PaymentToken;
 using Backend_Net.Application.Services.Signature;
 using Backend_Net.Domain.Entities;
 using Backend_Net.Domain.Enums;
-using Backend_Net.Infrastructure.Options;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Extensions;
+using Shared.Helpers;
+using Shared.MassTransit.Contracts.Queues;
+using Shared.MassTransit.IntegrationEvents;
 
 namespace Backend_Net.Application.Features.Orders.Commands.CreateOrder;
 
@@ -21,19 +28,25 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISignatureService _signatureService;
     private readonly AppOptions _appOptions;
+    private readonly IPaymentTokenService _paymentTokenService;
+    private readonly IMessageSender _messageSender;
 
     public CreateOrderHandler
     (
         ILogger<CreateOrderHandler> logger,
         IUnitOfWork unitOfWork,
         ISignatureService signatureService,
-        IOptions<AppOptions> appOptions
+        IOptions<AppOptions> appOptions,
+        IPaymentTokenService paymentTokenService,
+        IMessageSender messageSender
     )
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
         _signatureService = signatureService;
         _appOptions = appOptions.Value;
+        _paymentTokenService = paymentTokenService;
+        _messageSender = messageSender;
     }
 
     #region Implementation of IRequestHandler<in CreateOrderCommand, CreateOrderResponse>
@@ -54,6 +67,8 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
         {
             var credential = await _unitOfWork.TenantCredential
                 .Where(x => x.ApiKey == request.ApiKey)
+                .Include(x => x.Tenant)
+                .ThenInclude(x => x.TenantPaymentMethodCurrencies)
                 .Select(x => new
                 {
                     x.Id,
@@ -61,7 +76,11 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
                     x.SecretEncrypted,
                     x.Status,
                     TenantId = x.Tenant.Id,
-                    TenantIsActive = x.Tenant.IsActive
+                    TenantIsActive = x.Tenant.IsActive,
+                    Currencies = x.Tenant.TenantPaymentMethodCurrencies
+                        .Where(tpmc => tpmc.IsEnabled)
+                        .Select(tpmc => tpmc.CurrencyCode)
+                        .ToList()
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync(cancellationToken);
@@ -69,20 +88,40 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
             {
                 _logger.LogWarning("{Fn} Tenant not found: {ApiKey}", functionName, request.ApiKey);
                 response
-                    .WithSuccess(false)
                     .WithMessage(ErrorCode.TEN_ERR_001)
                     .WithStatus(HttpStatusCode.NotFound);
 
                 return response;
             }
-
+            
             if (!credential.TenantIsActive)
             {
                 _logger.LogWarning("{Fn} Tenant inactive: {ApiKey}", functionName, request.ApiKey);
                 response
-                    .WithSuccess(false)
                     .WithMessage(ErrorCode.TEN_ERR_002)
                     .WithStatus(HttpStatusCode.Forbidden);
+                return response;
+            }
+
+            if (!credential.Currencies.Contains(payload.Currency))
+            {
+                _logger.LogInformation("{Fn} Currency not supported: {Currency}", functionName, payload.Currency);
+                response
+                    .WithMessage(ErrorCode.CUR_ERR_001)
+                    .WithStatus(HttpStatusCode.BadRequest);
+                return response;
+            }
+            
+            var currency = await _unitOfWork.Currency.GetAll()
+                .AsNoTracking()
+                .Select(x => new { Code = x.Code })
+                .FirstOrDefaultAsync(x => x.Code == payload.Currency, cancellationToken);
+            if (currency == null)
+            {
+                _logger.LogWarning("{Fn} Currency not found: {Currency}", functionName, payload.Currency);
+                response
+                    .WithMessage(ErrorCode.CUR_ERR_001)
+                    .WithStatus(HttpStatusCode.BadRequest);
                 return response;
             }
 
@@ -93,7 +132,6 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
             {
                 _logger.LogWarning("{Fn} Invalid signature", functionName);
                 response
-                    .WithSuccess(false)
                     .WithMessage(ErrorCode.ORD_ERR_002)
                     .WithStatus(HttpStatusCode.BadRequest);
                 return response;
@@ -106,28 +144,27 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
                         x.TenantId == credential.TenantId &&
                         x.OrderId == payload.ReferenceId,
                     cancellationToken);
-
             if (existed)
             {
                 _logger.LogWarning("{Fn} OrderId exists: {OrderId}", functionName, payload.ReferenceId);
                 response
-                    .WithSuccess(false)
                     .WithMessage(ErrorCode.ORD_ERR_001)
                     .WithStatus(HttpStatusCode.Conflict);
                 return response;
             }
 
             var now = DateTime.UtcNow;
-
             var paymentTransaction = new PaymentTransaction
             {
+                TenantCredentialId = credential.Id,
                 TenantId = credential.TenantId,
                 UserId = payload.UserId,
                 OrderId = payload.ReferenceId,
                 PaymentMethodId = null,
-                CurrencyCode = null,
+                TenantCurrencyCode = currency.Code,
                 Amount = payload.Amount,
-                FeeAmount = 0,
+                Fee = null,
+                PayerFeeType = null,
                 NetAmount = payload.Amount,
                 Status = PaymentStatus.Created,
                 ProviderTxnId = null,
@@ -142,10 +179,11 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
             };
 
             await _unitOfWork.PaymentTransaction.Add(paymentTransaction);
-            await _unitOfWork.SaveAsync();
+            await _unitOfWork.SaveAsync(cancellationToken);
 
-            var encryptedPath = CryptographyHelper.Encrypt(ApplicationConstant.PaymentUrl, _appOptions.ClientSecret);
-            var paymentUrl = string.Format(ApplicationConstant.PaymentUrl, _appOptions.HostingUrl, encryptedPath);
+            var expireAt = now.AddMinutes(_appOptions.TokenExpirationInMinutes);
+            var token = _paymentTokenService.GeneratePaymentTokenAsync(paymentTransaction.Id, expireAt, cancellationToken: cancellationToken);
+            var paymentUrl = string.Format(ApplicationConstant.PaymentUrl, _appOptions.HostingUrl, token);
             response.Data = new CreateOrderData
             {
                 Id = paymentTransaction.Id,

@@ -48,6 +48,12 @@ public class BaseResponse<T> : BaseResponse
 {
     public T? Data { get; set; }
 
+    public BaseResponse<T> WithData(T data)
+    {
+        Data = data;
+        return this;
+    }
+    
     public static BaseResponse<T> Ok(T data, PagingInfo? paging = null)
         => new()
         {

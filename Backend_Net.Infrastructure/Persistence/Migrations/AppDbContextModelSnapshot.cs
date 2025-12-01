@@ -22,6 +22,61 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Backend_Net.Domain.Entities.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Alpha2Code")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character(2)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Alpha3Code")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .IsFixedLength();
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("DialCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("FlagUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alpha2Code")
+                        .IsUnique();
+
+                    b.HasIndex("Alpha3Code")
+                        .IsUnique();
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.HasIndex("DialCode");
+
+                    b.ToTable("Country", "payment");
+                });
+
             modelBuilder.Entity("Backend_Net.Domain.Entities.Currency", b =>
                 {
                     b.Property<string>("Code")
@@ -32,6 +87,11 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsGlobal")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("MinorUnit")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -41,9 +101,47 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
                     b.HasKey("Code");
 
                     b.ToTable("Currency", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.CurrencyRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("BaseCurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("QuoteCurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteCurrencyCode");
+
+                    b.HasIndex("BaseCurrencyCode", "QuoteCurrencyCode")
+                        .IsUnique()
+                        .HasDatabaseName("uq_currency_rate");
+
+                    b.ToTable("CurrencyRate", "payment");
                 });
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethod", b =>
@@ -52,6 +150,9 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("BackgroundUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -66,14 +167,29 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal>("Fee")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("FeeType")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
-                    b.Property<string>("ProviderType")
+                    b.Property<int>("PaymentMethodType")
+                        .HasColumnType("integer");
+
+                    b.PrimitiveCollection<string>("RuleData")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("RuleType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -128,6 +244,7 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<string>("CallbackUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -135,20 +252,24 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<string>("CurrencyCode")
-                        .HasColumnType("varchar(10)");
-
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("FeeAmount")
-                        .HasColumnType("numeric(20,8)");
+                    b.Property<decimal>("ExchangeRate")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal?>("NetAmount")
+                    b.Property<decimal?>("Fee")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("NetAmount")
                         .HasColumnType("numeric(20,8)");
 
                     b.Property<string>("OrderId")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int?>("PayerFeeType")
+                        .HasColumnType("integer");
 
                     b.Property<Guid?>("PaymentMethodId")
                         .HasColumnType("uuid");
@@ -163,12 +284,20 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ReturnUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(2);
+
+                    b.Property<Guid>("TenantCredentialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TenantCurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -178,14 +307,21 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<string>("UserCurrencyCode")
+                        .HasColumnType("varchar(10)");
+
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrencyCode");
-
                     b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("TenantCredentialId");
+
+                    b.HasIndex("TenantCurrencyCode");
+
+                    b.HasIndex("UserCurrencyCode");
 
                     b.HasIndex("TenantId", "CreatedAt")
                         .HasDatabaseName("idx_payment_tx_tenant_created_at");
@@ -439,10 +575,19 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<decimal>("Fee")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("FeeType")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
+
+                    b.Property<int>("PayerFeeType")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("PaymentMethodId")
                         .HasColumnType("uuid");
@@ -476,12 +621,6 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                     b.Property<string>("CurrencyCode")
                         .HasColumnType("varchar(10)");
 
-                    b.Property<string>("FeeType")
-                        .HasColumnType("text");
-
-                    b.Property<decimal?>("FeeValue")
-                        .HasColumnType("numeric(20,8)");
-
                     b.Property<bool>("IsEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -500,6 +639,108 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                     b.HasIndex("PaymentMethodId", "CurrencyCode");
 
                     b.ToTable("TenantPaymentMethodCurrency", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantWallet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Balance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,8)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("PendingBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,8)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.HasIndex("TenantId", "CurrencyCode")
+                        .IsUnique();
+
+                    b.ToTable("TenantWallet", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantWalletAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<decimal>("BalanceAfter")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<decimal>("BalanceBefore")
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Direction")
+                        .HasMaxLength(20)
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RelatedType")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RelatedType");
+
+                    b.HasIndex("TransactionId");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("TenantWalletAudit", "payment");
                 });
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookDelivery", b =>
@@ -528,18 +769,23 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                     b.Property<int?>("HttpStatus")
                         .HasColumnType("integer");
 
+                    b.Property<int>("MaxAttempt")
+                        .HasColumnType("integer");
+
                     b.Property<string>("RequestBody")
                         .HasColumnType("jsonb");
 
                     b.Property<string>("ResponseBody")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("RetryAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -556,8 +802,9 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("CallbackData")
-                        .HasColumnType("jsonb");
+                    b.Property<string>("ApiKey")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("CallbackUrl")
                         .IsRequired()
@@ -576,10 +823,14 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("Signature")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TransactionId")
+                    b.Property<Guid>("TransactionId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -589,6 +840,36 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                     b.HasIndex("TransactionId");
 
                     b.ToTable("WebhookEvent", "payment");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.Country", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "BaseCurrency")
+                        .WithMany("Countries")
+                        .HasForeignKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BaseCurrency");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.CurrencyRate", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "BaseCurrency")
+                        .WithMany("BaseCurrencyRates")
+                        .HasForeignKey("BaseCurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "QuoteCurrency")
+                        .WithMany("QuoteCurrencyRates")
+                        .HasForeignKey("QuoteCurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BaseCurrency");
+
+                    b.Navigation("QuoteCurrency");
                 });
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethodCurrency", b =>
@@ -612,13 +893,21 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransaction", b =>
                 {
-                    b.HasOne("Backend_Net.Domain.Entities.Currency", "Currency")
-                        .WithMany("PaymentTransactions")
-                        .HasForeignKey("CurrencyCode");
-
                     b.HasOne("Backend_Net.Domain.Entities.PaymentMethod", "PaymentMethod")
                         .WithMany("PaymentTransactions")
                         .HasForeignKey("PaymentMethodId");
+
+                    b.HasOne("Backend_Net.Domain.Entities.TenantCredential", "TenantCredential")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("TenantCredentialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "TenantCurrency")
+                        .WithMany("TenantPaymentTransactions")
+                        .HasForeignKey("TenantCurrencyCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
                         .WithMany("PaymentTransactions")
@@ -626,11 +915,19 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Currency");
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "UserCurrency")
+                        .WithMany("UserPaymentTransactions")
+                        .HasForeignKey("UserCurrencyCode");
 
                     b.Navigation("PaymentMethod");
 
                     b.Navigation("Tenant");
+
+                    b.Navigation("TenantCredential");
+
+                    b.Navigation("TenantCurrency");
+
+                    b.Navigation("UserCurrency");
                 });
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentTransactionAudit", b =>
@@ -740,6 +1037,36 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantWallet", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.Currency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend_Net.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantWalletAudit", b =>
+                {
+                    b.HasOne("Backend_Net.Domain.Entities.TenantWallet", "Wallet")
+                        .WithMany("Audits")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Wallet");
+                });
+
             modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookDelivery", b =>
                 {
                     b.HasOne("Backend_Net.Domain.Entities.WebhookEvent", "Event")
@@ -761,7 +1088,9 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
 
                     b.HasOne("Backend_Net.Domain.Entities.PaymentTransaction", "Transaction")
                         .WithMany("WebhookEvents")
-                        .HasForeignKey("TransactionId");
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Tenant");
 
@@ -770,11 +1099,19 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.Currency", b =>
                 {
+                    b.Navigation("BaseCurrencyRates");
+
+                    b.Navigation("Countries");
+
                     b.Navigation("PaymentMethodCurrencies");
 
-                    b.Navigation("PaymentTransactions");
+                    b.Navigation("QuoteCurrencyRates");
 
                     b.Navigation("TenantPaymentMethodCurrencies");
+
+                    b.Navigation("TenantPaymentTransactions");
+
+                    b.Navigation("UserPaymentTransactions");
                 });
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.PaymentMethod", b =>
@@ -819,7 +1156,14 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.TenantCredential", b =>
                 {
+                    b.Navigation("PaymentTransactions");
+
                     b.Navigation("RequestLogs");
+                });
+
+            modelBuilder.Entity("Backend_Net.Domain.Entities.TenantWallet", b =>
+                {
+                    b.Navigation("Audits");
                 });
 
             modelBuilder.Entity("Backend_Net.Domain.Entities.WebhookEvent", b =>

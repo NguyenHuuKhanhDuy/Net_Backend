@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using Backend_Net.Api.Attributes;
-using Backend_Net.Application.Common.Helpers;
 using Backend_Net.Application.Features.RequestLog.Commands.CreateRequestLog;
 using MediatR;
+using Shared.Helpers;
 
 namespace Backend_Net.Api.Middlewares;
 

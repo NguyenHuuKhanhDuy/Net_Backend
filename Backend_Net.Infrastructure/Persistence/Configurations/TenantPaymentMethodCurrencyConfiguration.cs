@@ -18,9 +18,6 @@ public class TenantPaymentMethodCurrencyConfiguration : IEntityTypeConfiguration
         b.Property(x => x.MaxAmount)
             .HasColumnType("numeric(20,8)");
 
-        b.Property(x => x.FeeValue)
-            .HasColumnType("numeric(20,8)");
-
         b.Property(x => x.IsEnabled)
             .IsRequired()
             .HasDefaultValue(true);

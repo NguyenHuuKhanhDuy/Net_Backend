@@ -1,4 +1,6 @@
-﻿namespace Backend_Net.Domain.Entities;
+﻿using Backend_Net.Domain.Enums;
+
+namespace Backend_Net.Domain.Entities;
 
 public class TenantPaymentMethod
 {
@@ -7,7 +9,10 @@ public class TenantPaymentMethod
     public Guid PaymentMethodId { get; set; }
     public bool IsEnabled { get; set; }
     public string? ConfigJson { get; set; }
-
+    public decimal Fee { get; set; }
+    public FeeType FeeType { get; set; }
+    public PayerFeeType PayerFeeType { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

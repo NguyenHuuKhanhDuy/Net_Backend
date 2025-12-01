@@ -1,4 +1,4 @@
-﻿using Backend_Net.Api.Validation;
+﻿using Backend_Net.Application.Validation;
 using Newtonsoft.Json;
 
 namespace Backend_Net.Api.Handler

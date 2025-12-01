@@ -19,9 +19,6 @@ public class PaymentTransactionConfiguration : IEntityTypeConfiguration<PaymentT
         b.Property(x => x.Amount)
             .HasColumnType("numeric(20,8)");
 
-        b.Property(x => x.FeeAmount)
-            .HasColumnType("numeric(20,8)");
-
         b.Property(x => x.NetAmount)
             .HasColumnType("numeric(20,8)");
 
@@ -50,15 +47,23 @@ public class PaymentTransactionConfiguration : IEntityTypeConfiguration<PaymentT
         b.HasOne(x => x.Tenant)
             .WithMany(t => t.PaymentTransactions)
             .HasForeignKey(x => x.TenantId);
+        
+        b.HasOne(x => x.TenantCredential)
+            .WithMany(t => t.PaymentTransactions)
+            .HasForeignKey(x => x.TenantCredentialId);
 
         b.HasOne(x => x.PaymentMethod)
             .WithMany(pm => pm.PaymentTransactions)
             .HasForeignKey(x => x.PaymentMethodId);
 
-        b.HasOne(x => x.Currency)
-            .WithMany(c => c.PaymentTransactions)
-            .HasForeignKey(x => x.CurrencyCode);
+        b.HasOne(x => x.TenantCurrency)
+            .WithMany(c => c.TenantPaymentTransactions)
+            .HasForeignKey(x => x.TenantCurrencyCode);
 
+        b.HasOne(x => x.UserCurrency)
+            .WithMany(c => c.UserPaymentTransactions)
+            .HasForeignKey(x => x.UserCurrencyCode);
+        
         b.HasIndex(x => new { x.TenantId, x.CreatedAt })
             .HasDatabaseName("idx_payment_tx_tenant_created_at");
 

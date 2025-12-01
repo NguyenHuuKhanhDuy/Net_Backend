@@ -1,6 +1,6 @@
 using Backend_Net.Api.StartupRegistrations;
-using Backend_Net.Api.Validation;
 using Backend_Net.Application;
+using Backend_Net.Application.ServiceRegistration;
 using Backend_Net.Infrastructure;
 using MediatR;
 using Serilog;
@@ -18,8 +18,7 @@ builder.Services
     .AddCorsLayer(builder.Configuration)
     .AddSwaggerLayer()
     .AddControllersLayer()
-    .AddCustomHttpContextAccessor()
-    .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+    .AddCustomHttpContextAccessor();
 
 var app = builder.Build();
 

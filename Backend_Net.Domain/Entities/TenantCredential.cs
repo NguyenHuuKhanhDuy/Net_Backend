@@ -15,5 +15,6 @@ namespace Backend_Net.Domain.Entities
         
         public Tenant Tenant { get; set; }
         public ICollection<RequestLog> RequestLogs { get; set; } = new List<RequestLog>();
+        public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
     }
 }

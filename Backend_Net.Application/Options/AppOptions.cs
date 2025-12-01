@@ -1,4 +1,4 @@
-﻿namespace Backend_Net.Infrastructure.Options;
+﻿namespace Backend_Net.Application.Options;
 
 public class AppOptions
 {
@@ -6,4 +6,5 @@ public class AppOptions
     public string Name { get; set; }
     public string HostingUrl { get; set; }
     public string ClientSecret { get; set; }
+    public int TokenExpirationInMinutes { get; set; }
 }

@@ -24,12 +24,30 @@ public class PaymentMethodConfiguration : IEntityTypeConfiguration<PaymentMethod
         b.Property(x => x.DisplayName)
             .IsRequired();
 
-        b.Property(x => x.ProviderType)
+        b.Property(x => x.BackgroundUrl);
+        
+        b.Property(x => x.PaymentMethodType)
             .IsRequired();
-
+        
+        b.Property(x => x.Type)
+            .IsRequired();
+        
+        b.Property(x => x.RuleData)
+            .IsRequired()
+            .HasColumnType("jsonb");
+        
+        b.Property(x => x.RuleType)
+            .IsRequired();
+        
         b.Property(x => x.IsActive)
             .IsRequired()
             .HasDefaultValue(true);
+        
+        b.Property(x => x.Fee)
+            .IsRequired();
+        
+        b.Property(x => x.FeeType)
+            .IsRequired();
 
         b.Property(x => x.CreatedAt)
             .IsRequired()

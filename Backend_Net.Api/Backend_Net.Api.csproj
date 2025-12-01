@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Backend_Net.Application\Backend_Net.Application.csproj" />
     <ProjectReference Include="..\Backend_Net.Infrastructure\Backend_Net.Infrastructure.csproj" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>

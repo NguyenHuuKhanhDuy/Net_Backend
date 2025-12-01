@@ -8,12 +8,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backend_Net.Domain\Backend_Net.Domain.csproj" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
-    <PackageReference Include="MediatR" Version="13.1.0" />
+    <PackageReference Include="MediatR" Version="12.0.1" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.0" />
@@ -22,9 +23,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Features\BackgroundJobs\Commands\" />
+    <Folder Include="Features\Country\Queries\" />
+    <Folder Include="Features\Invoices\" />
     <Folder Include="Features\Orders\Commands\" />
+    <Folder Include="Features\Orders\Queries\" />
+    <Folder Include="Features\PaymentMethods\Queries\" />
+    <Folder Include="Features\PaymentProvider\Stripe\Command\" />
     <Folder Include="Features\RequestLog\Commands\" />
-    <Folder Include="Models\" />
+    <Folder Include="Features\WebHooks\Commands\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Http">
+      <HintPath>C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.0\Microsoft.Extensions.Http.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

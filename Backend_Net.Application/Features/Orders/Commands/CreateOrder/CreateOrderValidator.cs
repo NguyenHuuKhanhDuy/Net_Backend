@@ -15,6 +15,20 @@ public class CreateOrderValidator : AbstractValidator<CreateOrderCommand>
             .WithErrorCode(ErrorCode.DAT_ERR_002.Code())
             .WithMessage(ErrorCode.DAT_ERR_002.Localize());
         
+        RuleFor(command => command.ApiKey)
+            .Cascade(CascadeMode.Stop)
+            .NotNull()
+            .NotEmpty()
+            .WithErrorCode(ErrorCode.DAT_ERR_001.Code())
+            .WithMessage(ErrorCode.DAT_ERR_001.Localize());
+        
+        RuleFor(command => command.Signature)
+            .Cascade(CascadeMode.Stop)
+            .NotNull()
+            .NotEmpty()
+            .WithErrorCode(ErrorCode.DAT_ERR_001.Code())
+            .WithMessage(ErrorCode.DAT_ERR_001.Localize());
+        
         RuleFor(command => command.Payload.Amount)
             .Cascade(CascadeMode.Stop)
             .NotNull()

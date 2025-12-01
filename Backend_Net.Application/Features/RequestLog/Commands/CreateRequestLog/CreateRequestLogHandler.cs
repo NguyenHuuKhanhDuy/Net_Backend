@@ -4,6 +4,7 @@ using Backend_Net.Application.Common.Interfaces.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Shared.Helpers;
 
 namespace Backend_Net.Application.Features.RequestLog.Commands.CreateRequestLog;
 

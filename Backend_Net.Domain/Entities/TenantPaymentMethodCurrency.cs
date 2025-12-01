@@ -10,9 +10,6 @@ public class TenantPaymentMethodCurrency
     public decimal? MinAmount { get; set; }
     public decimal? MaxAmount { get; set; }
 
-    public string? FeeType { get; set; }
-    public decimal? FeeValue { get; set; }
-
     public Tenant Tenant { get; set; } = null!;
     public PaymentMethod PaymentMethod { get; set; } = null!;
     public Currency Currency { get; set; } = null!;
