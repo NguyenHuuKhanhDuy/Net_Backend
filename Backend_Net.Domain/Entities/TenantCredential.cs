@@ -7,7 +7,6 @@ namespace Backend_Net.Domain.Entities
         public Guid Id { get; set; }
         public Guid TenantId { get; set; }
         public string ApiKey { get; set; }
-        public string SecretEncrypted { get; set; }
         public int Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }

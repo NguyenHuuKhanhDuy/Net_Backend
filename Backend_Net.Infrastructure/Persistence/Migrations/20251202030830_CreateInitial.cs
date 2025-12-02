@@ -167,7 +167,6 @@ namespace Backend_Net.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     ApiKey = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    SecretEncrypted = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                     ExpiredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),

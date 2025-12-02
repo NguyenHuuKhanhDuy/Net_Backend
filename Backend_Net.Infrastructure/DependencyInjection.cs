@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Backend_Net.Application.Common.Interfaces;
+using Backend_Net.Application.Common.Interfaces.Azure;
 using Backend_Net.Application.Common.Interfaces.PaymentProvider;
 using Backend_Net.Application.Common.Interfaces.Repositories;
 using Backend_Net.Application.Services.MessageBus;
@@ -9,6 +10,7 @@ using Backend_Net.Infrastructure.MassTransit.Consumers;
 using Backend_Net.Infrastructure.Options;
 using Backend_Net.Infrastructure.Persistence;
 using Backend_Net.Infrastructure.Services.PaymentProvider;
+using Backend_Net.Infrastructure.Services.Secret;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +33,7 @@ public static class DependencyInjection
         services.AddCustomServices();
         
         services.AddCustomMassTransitRegistration(configuration, Assembly.GetExecutingAssembly());
+        services.AddCustomOptions(configuration);
         return services;
     }
     
@@ -40,13 +43,14 @@ public static class DependencyInjection
         services.AddScoped<IMessageBusService, MessageBusService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
         services.AddScoped<IStripeService, StripeService>();
+        services.AddSingleton<ISecretService, SecretService>();
         
         return services;
     }
     
     private static IServiceCollection AddCustomOptions(this IServiceCollection services, IConfiguration config)
     {
-        services.Configure<AzureServiceBusOptions>(config.GetSection(AzureServiceBusOptions.OptionName));
+        services.Configure<AzureOptions>(config.GetSection(AzureOptions.OptionName));
         services.Configure<RabbitMQOptions>(config.GetSection(RabbitMQOptions.OptionName));
         return services;
     }

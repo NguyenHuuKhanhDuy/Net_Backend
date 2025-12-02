@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text;
 using Backend_Net.Application.Common.Extensions;
 using Backend_Net.Application.Common.Helpers;
+using Backend_Net.Application.Common.Interfaces.Azure;
 using Backend_Net.Application.Common.Interfaces.Repositories;
 using Backend_Net.Application.Constants;
 using Backend_Net.Application.Models.Dtos;
@@ -25,6 +26,7 @@ public class WebhookService : IWebhookService
     private readonly ILogger<WebhookService> _logger;
     private readonly ISignatureService _signatureService;
     private readonly AppOptions _appOptions;
+    private readonly ISecretService _secretService;
 
     public WebhookService
     (
@@ -32,7 +34,8 @@ public class WebhookService : IWebhookService
         IHttpClientFactory httpClientFactory,
         ILogger<WebhookService> logger,
         ISignatureService signatureService,
-        IOptions<AppOptions> appOptions
+        IOptions<AppOptions> appOptions,
+        ISecretService secretService
     )
     {
         _unitOfWork = unitOfWork;
@@ -40,6 +43,7 @@ public class WebhookService : IWebhookService
         _logger = logger;
         _signatureService = signatureService;
         _appOptions = appOptions.Value;
+        _secretService = secretService;
     }
     
     public async Task<Guid> QueueWebhookAsync(Guid paymentTransactionId, CancellationToken cancellationToken)
@@ -64,15 +68,15 @@ public class WebhookService : IWebhookService
                 CreatedAt = x.CreatedAt,
                 TenantCredential = new TenantCredential
                 {
-                    ApiKey = x.TenantCredential.ApiKey,
-                    SecretEncrypted = x.TenantCredential.SecretEncrypted
+                    Id = x.TenantCredential.Id,
+                    ApiKey = x.TenantCredential.ApiKey
                 },
                 TenantId = x.TenantId,
             })
             .FirstOrDefaultAsync(cancellationToken);
         if (paymentTransaction is null)
         {
-            throw new ArgumentException($"{fun} PaymentTransaction not found");
+            return Guid.Empty;
         }
 
         var payload = new WebhookDto
@@ -88,8 +92,14 @@ public class WebhookService : IWebhookService
             CallbackUrl = paymentTransaction.CallbackUrl,
             CreatedAt = paymentTransaction.CreatedAt.ToString("O"),
         };
+
+        var secret = await _secretService.GetSecretAsync(paymentTransaction.TenantCredential.Id.ToString(), cancellationToken);
+        if (string.IsNullOrEmpty(secret))
+        {
+            _logger.LogInformation("{FunctionName:l} Secret not found for TenantCredentialId: {TenantCredentialId}", fun, paymentTransaction.TenantCredential.Id);
+            return Guid.Empty;
+        }
         
-        var secret = CryptographyHelper.Decrypt(paymentTransaction.TenantCredential.SecretEncrypted, _appOptions.ClientSecret);
         var signature = _signatureService.CreateSignature(payload.ToDictionary(), secret);
         var evt = new WebhookEvent
         {

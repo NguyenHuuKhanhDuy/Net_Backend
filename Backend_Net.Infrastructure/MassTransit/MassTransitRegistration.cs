@@ -21,7 +21,8 @@ public static class MassTransitRegistration
     )
     {
         var massTransitBroker = configuration.GetValue<MassTransitBroker>("MassTransitBroker");
-        var azureServiceBusOptions = configuration.GetOptions<AzureServiceBusOptions>(AzureServiceBusOptions.OptionName);
+        var azureOptions = configuration.GetOptions<AzureOptions>(AzureOptions.OptionName);
+        var azureServiceBusOptions = azureOptions.ServiceBus;
         var rabbitMqOptions = configuration.GetOptions<RabbitMQOptions>(RabbitMQOptions.OptionName);
         
         services.AddMassTransit(x =>
@@ -39,7 +40,7 @@ public static class MassTransitRegistration
                 {
                     if(cfg is IServiceBusEndpointConfigurator sb)
                     {
-                        sb.DefaultMessageTimeToLive = TimeSpan.FromDays(azureServiceBusOptions.DefaultMessageTimeToLive);
+                        sb.DefaultMessageTimeToLive = TimeSpan.FromDays(azureOptions.ServiceBus.DefaultMessageTimeToLive);
                         sb.AutoDeleteOnIdle =  TimeSpan.FromDays(azureServiceBusOptions.DefaultMessageTimeToLive + 1);
                         sb.LockDuration = TimeSpan.FromMinutes(1);
                         sb.EnableDeadLetteringOnMessageExpiration = false;

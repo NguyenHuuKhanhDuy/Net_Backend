@@ -2,6 +2,7 @@ using System.Net;
 using Backend_Net.Application.Common.Extensions;
 using Backend_Net.Application.Common.Helpers;
 using Backend_Net.Application.Common.Interfaces;
+using Backend_Net.Application.Common.Interfaces.Azure;
 using Backend_Net.Application.Common.Interfaces.MassTransit;
 using Backend_Net.Application.Common.Interfaces.Repositories;
 using Backend_Net.Application.Constants;
@@ -29,7 +30,7 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
     private readonly ISignatureService _signatureService;
     private readonly AppOptions _appOptions;
     private readonly IPaymentTokenService _paymentTokenService;
-    private readonly IMessageSender _messageSender;
+    private readonly ISecretService _secretService;
 
     public CreateOrderHandler
     (
@@ -38,7 +39,7 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
         ISignatureService signatureService,
         IOptions<AppOptions> appOptions,
         IPaymentTokenService paymentTokenService,
-        IMessageSender messageSender
+        ISecretService secretService
     )
     {
         _logger = logger;
@@ -46,7 +47,7 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
         _signatureService = signatureService;
         _appOptions = appOptions.Value;
         _paymentTokenService = paymentTokenService;
-        _messageSender = messageSender;
+        _secretService = secretService;
     }
 
     #region Implementation of IRequestHandler<in CreateOrderCommand, CreateOrderResponse>
@@ -73,7 +74,6 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
                 {
                     x.Id,
                     x.ApiKey,
-                    x.SecretEncrypted,
                     x.Status,
                     TenantId = x.Tenant.Id,
                     TenantIsActive = x.Tenant.IsActive,
@@ -125,8 +125,16 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
                 return response;
             }
 
-            var tenantSecret = CryptographyHelper.Decrypt(credential.SecretEncrypted, _appOptions.ClientSecret);
-            var serverSignature = _signatureService.CreateSignature(payload.ToDictionary(), tenantSecret);
+            var credentialSecret = await _secretService.GetSecretAsync(credential.Id.ToString(), cancellationToken);
+            if (string.IsNullOrWhiteSpace(credentialSecret))
+            {
+                _logger.LogError("{Fn} Credential secret not found: {CredentialId}", functionName, credential.Id);
+                response
+                    .WithMessage(ErrorCode.EXH_ERR_002);
+                return response;
+            }
+            
+            var serverSignature = _signatureService.CreateSignature(payload.ToDictionary(), credentialSecret);
             if (string.IsNullOrWhiteSpace(serverSignature) ||
                 !serverSignature.Equals(request.Signature, StringComparison.Ordinal))
             {
@@ -198,6 +206,8 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
         catch (Exception ex)
         {
             ex.LogError(_logger, functionName);
+            response
+                .WithMessage(ErrorCode.EXH_ERR_001);
         }
 
         return response;

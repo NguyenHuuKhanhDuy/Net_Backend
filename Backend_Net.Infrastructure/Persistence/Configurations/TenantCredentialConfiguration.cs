@@ -22,10 +22,6 @@ namespace Backend_Net.Infrastructure.Persistence.Configurations
                 .HasMaxLength(100)
                 .IsRequired();
 
-            builder.Property(x => x.SecretEncrypted)
-                .HasColumnType("text")
-                .IsRequired();
-
             builder.Property(x => x.Status)
                 .IsRequired();
 

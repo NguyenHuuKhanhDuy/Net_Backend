@@ -77,14 +77,13 @@ CREATE TABLE IF NOT EXISTS payment."PaymentMethodCurrency"
 
 CREATE TABLE IF NOT EXISTS payment."TenantCredentials"
 (
-    "Id"              uuid                     NOT NULL DEFAULT (gen_random_uuid()),
-    "TenantId"        uuid                     NOT NULL,
-    "ApiKey"          character varying(100)   NOT NULL,
-    "SecretEncrypted" text                     NOT NULL,
-    "Status"          integer                  NOT NULL,
-    "CreatedAt"       timestamp with time zone NOT NULL DEFAULT (NOW()),
-    "ExpiredAt"       timestamp with time zone,
-    "LastRotatedAt"   timestamp with time zone NOT NULL DEFAULT (NOW()),
+    "Id"            uuid                     NOT NULL DEFAULT (gen_random_uuid()),
+    "TenantId"      uuid                     NOT NULL,
+    "ApiKey"        character varying(100)   NOT NULL,
+    "Status"        integer                  NOT NULL,
+    "CreatedAt"     timestamp with time zone NOT NULL DEFAULT (NOW()),
+    "ExpiredAt"     timestamp with time zone,
+    "LastRotatedAt" timestamp with time zone NOT NULL DEFAULT (NOW()),
     CONSTRAINT "PK_TenantCredentials" PRIMARY KEY ("Id"),
     CONSTRAINT "FK_TenantCredentials_Tenant_TenantId" FOREIGN KEY ("TenantId") REFERENCES payment."Tenant" ("Id") ON DELETE CASCADE
 );
