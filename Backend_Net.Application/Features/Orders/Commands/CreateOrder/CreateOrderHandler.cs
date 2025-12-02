@@ -1,12 +1,7 @@
 using System.Net;
-using Backend_Net.Application.Common.Extensions;
-using Backend_Net.Application.Common.Helpers;
-using Backend_Net.Application.Common.Interfaces;
 using Backend_Net.Application.Common.Interfaces.Azure;
-using Backend_Net.Application.Common.Interfaces.MassTransit;
 using Backend_Net.Application.Common.Interfaces.Repositories;
 using Backend_Net.Application.Constants;
-using Backend_Net.Application.Models.Dtos;
 using Backend_Net.Application.Options;
 using Backend_Net.Application.Services.PaymentToken;
 using Backend_Net.Application.Services.Signature;
@@ -18,8 +13,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Extensions;
 using Shared.Helpers;
-using Shared.MassTransit.Contracts.Queues;
-using Shared.MassTransit.IntegrationEvents;
 
 namespace Backend_Net.Application.Features.Orders.Commands.CreateOrder;
 

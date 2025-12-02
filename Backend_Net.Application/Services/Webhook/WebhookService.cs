@@ -1,19 +1,14 @@
 ﻿using System.Globalization;
-using System.Net.Http.Json;
 using System.Text;
-using Backend_Net.Application.Common.Extensions;
-using Backend_Net.Application.Common.Helpers;
 using Backend_Net.Application.Common.Interfaces.Azure;
 using Backend_Net.Application.Common.Interfaces.Repositories;
 using Backend_Net.Application.Constants;
 using Backend_Net.Application.Models.Dtos;
-using Backend_Net.Application.Options;
 using Backend_Net.Application.Services.Signature;
 using Backend_Net.Domain.Entities;
 using Backend_Net.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Shared.Extensions;
 using Shared.Helpers;
 
@@ -25,7 +20,6 @@ public class WebhookService : IWebhookService
     private readonly HttpClient _http;
     private readonly ILogger<WebhookService> _logger;
     private readonly ISignatureService _signatureService;
-    private readonly AppOptions _appOptions;
     private readonly ISecretService _secretService;
 
     public WebhookService
@@ -34,7 +28,6 @@ public class WebhookService : IWebhookService
         IHttpClientFactory httpClientFactory,
         ILogger<WebhookService> logger,
         ISignatureService signatureService,
-        IOptions<AppOptions> appOptions,
         ISecretService secretService
     )
     {
@@ -42,7 +35,6 @@ public class WebhookService : IWebhookService
         _http = httpClientFactory.CreateClient();
         _logger = logger;
         _signatureService = signatureService;
-        _appOptions = appOptions.Value;
         _secretService = secretService;
     }
     

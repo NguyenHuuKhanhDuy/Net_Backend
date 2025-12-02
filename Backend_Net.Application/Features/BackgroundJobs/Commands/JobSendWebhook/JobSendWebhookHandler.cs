@@ -62,7 +62,7 @@ public class JobSendWebhookHandler : IRequestHandler<JobSendWebhookCommand>
             {
                 _messageSender.SendMessage<SendWebhook>(new
                 {
-                    Content = new SendWebhookEvent()
+                    Content = new SendWebhookEvent
                     {
                         WebhookDeliveryIds = chunk.ToList()
                     }
